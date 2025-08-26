@@ -63,9 +63,6 @@
       if (strlen($password) < 8) {
         $errors['password'] = "Password must have at least 8 characters";
         $all_set = false;
-      } else {
-        // hash the password
-        $password = password_hash($password, PASSWORD_DEFAULT);
       }
     }
     // DB query
@@ -76,20 +73,35 @@
 
       $query = "SELECT * FROM users WHERE email = '$email' LIMIT 1";
       $result = mysqli_query($conn, $query);
+
       if (!$result) {
-        if (mysqli_errno($conn) == 1062) {
-          $errors['system'] = "Error: Duplicate entry (maybe email already exists)";
+        // log the real error
+        error_log("MySQL error: " . mysqli_error($conn));
+        // show user-friendly message
+        die("Something went wrong. Please try again later.");
+      }
+
+      //result row check
+      if (mysqli_num_rows($result) == 0) {
+        $errors['system'] = "Invalid Email or Password.";
+      }
+      else{
+        // user data featch
+        $user = mysqli_fetch_assoc($result);
+        
+        // verif Password
+        if (password_verify($password, $user['password'])) {
+          $_SESSION['user_id'] = $user['id'];
+          $_SESSION['user_name'] = $user['name'];
+          echo "Login Sucessfull.";
+          header("Location: profile.php");
+          exit();
         } else {
-          $error['system'] = "Someting went Wrong, Please Try Again.";
-          error_log("Database Error:" . mysqli_error($conn));
+          $errors['system'] = "wrong Password.Try Again.";
         }
-      } else {
-        header("Location: profile.php");
-        exit();
       }
     }
   }
-
   ?>
   <!-- php script end -->
 </head>

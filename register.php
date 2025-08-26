@@ -20,11 +20,15 @@
     <!-- Php logics -->
     <?php
     require "config/db.php";  // $conn = mysqli_connect(...)
-    $name = $email = $password = $file_path = "";
+    $name = $email = $mobile = $gender = $dob = $password = $address = $file_path = '';
     $all_set = true;
     $errors = [
         'name' => '',
         'email' => '',
+        'mobile' => '',
+        'gender' => '',
+        'address' => '',
+        'dob' => '',
         'password' => '',
         'confirm_password' => '',
         'file' => '',
@@ -62,6 +66,46 @@
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $errors['email'] = "Invalid Email Address.";
                 $all_set = false;
+            }
+        }
+
+        // mobile
+        if (empty($_POST['mobile'])) {
+            $errors['mobile'] = "Mobile No. is Required";
+            $all_set = false;
+        } else {
+            $mobile = test_data($_POST["mobile"]);
+            if (strlen($mobile) > 10 or strlen($mobile) < 10) {
+                $errors['mobile'] = "Invalid Mobile No.";
+                $all_set = false;
+            }
+        }
+
+        // gender
+        if (empty($_POST['gender'])) {
+            $errors['gender'] = "Gender is require";
+            $all_set = false;
+        } else {
+            $gender = test_data($_POST["gender"]);
+        }
+
+        // address
+        if (empty($_POST['address'])) {
+            $error['address'] = "Address Is require.";
+        } else {
+            $address = test_data($_POST['address']);
+            if (strlen($address) > 10) {
+                $error['address'] = "Invalid Address.";
+            }
+        }
+        
+        // Date og birth
+        if (empty($_POST['dob'])) {
+            $error['dob'] = "Date of Birth Is require.";
+        } else {
+            $dob = test_data($_POST['dob']);
+            if (strlen($dob) > 8) {
+                $error['address'] = "Invalid Address.";
             }
         }
 
@@ -118,13 +162,17 @@
         // Insert into DB if all valid
         if ($all_set) {
             // Escape values for safety
-            $username = mysqli_real_escape_string($conn, $name);
+            $name = mysqli_real_escape_string($conn, $name);
             $email = mysqli_real_escape_string($conn, $email);
+            $mobile = mysqli_real_escape_string($conn, $mobile);
+            $gender = mysqli_real_escape_string($conn, $gender);
+            $address = mysqli_real_escape_string($conn, $address);
+            $dob = mysqli_real_escape_string($conn, $dob);
             $password = mysqli_real_escape_string($conn, $password);
             $file_path = mysqli_real_escape_string($conn, $file_path);
 
-            $query = "INSERT INTO users (name, email, password, profile_image) 
-                  VALUES ('$username', '$email', '$password', '$file_path')";
+            $query = "INSERT INTO users (name, email, mobile, gender, dob,address ,password, profile_image) 
+                  VALUES ('$name', '$email','$mobile','$gender','$dob','$address','$password', '$file_path')";
             $result = mysqli_query($conn, $query);
             if (!$result) {
                 if (mysqli_errno($conn) == 1062) {
@@ -134,7 +182,7 @@
                     error_log("Database Error:" . mysqli_error($conn));
                 }
             } else {
-                header("Location: login.php");
+                header("Location: login.php?error=$error[system]");
                 exit();
             }
         }
@@ -160,14 +208,16 @@
                 </div>
             <?php endif; ?>
             <form action="" method="post" enctype="multipart/form-data">
+                <!-- full name -->
                 <div class="form-group has-feedback">
                     <input type="text" class="form-control" name="name" value="<?php echo $name ?>"
                         placeholder="Full name" required>
                     <span class="glyphicon glyphicon-user form-control-feedback"></span>
                     <?php if ($errors['name']): ?>
-                        <small class="text-danger"><?php echo $errors['username']; ?></small>
+                        <small class="text-danger"><?php echo $errors['name']; ?></small>
                     <?php endif; ?>
                 </div>
+                <!-- email -->
                 <div class="form-group has-feedback">
                     <input type="email" class="form-control" name="email" value="<?php echo $email ?>"
                         placeholder="Email" required>
@@ -176,6 +226,45 @@
                         <small class="text-danger"><?php echo $errors['email']; ?></small>
                     <?php endif; ?>
                 </div>
+                <!-- mobile -->
+                <div class="form-group has-feedback">
+                    <input type="number" class="form-control" name="mobile" value="<?php echo $mobile ?>"
+                        placeholder="Mobile No." required>
+                    <span class="glyphicon glyphicon-phone form-control-feedback"></span>
+                    <?php if ($errors['mobile']): ?>
+                        <small class="text-danger"><?php echo $errors['mobile']; ?></small>
+                    <?php endif; ?>
+                </div>
+                <!-- gender -->
+                <div class="form-group has-feedback">
+                    <select class="form-control" name="gender" value="<?php echo $gender ?>" required>
+                        <option value="">Select Gender</option>
+                        <option class="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">other</option>
+                    </select>
+                    <?php if ($errors['gender']): ?>
+                        <small class="text-danger"><?php echo $errors['gender']; ?></small>
+                    <?php endif; ?>
+                </div>
+                <!-- Address -->
+                <div class="form-group has-feedback">
+                    <input type="text" class="form-control" name="address" value="<?php echo $address ?>"
+                        placeholder="Address" required>
+                    <span class="glyphicon glyphicon-home form-control-feedback"></span>
+                    <?php if ($errors['address']): ?>
+                        <small class="text-danger"><?php echo $errors['address']; ?></small>
+                    <?php endif; ?>
+                </div>
+                <!-- dob -->
+                <div class="form-group has-feedback">
+                    <input type="date" class="form-control" placeholder="Date of Birth" name="dob"
+                        value="<?php echo $dob ?>">
+                    <?php if ($errors['dob']): ?>
+                        <small class="text-danger"><?php echo $errors['dob']; ?></small>
+                    <?php endif; ?>
+                </div>
+                <!-- password -->
                 <div class="form-group has-feedback">
                     <input type="password" class="form-control" name="password" value="<?php echo $password ?>"
                         placeholder="Password">
@@ -186,14 +275,15 @@
                 </div>
                 <div class="form-group has-feedback">
                     <input type="password" class="form-control" name="confirm_password" placeholder="Retype password">
-                    <span class="glyphicon glyphicon-log-in form-control-feedback"></span>
+                    <span class="glyphicon glyphicon-lock form-control-feedback"></span>
                     <?php if ($errors['confirm_password']): ?>
                         <small class="text-danger"><?php echo $errors['confirm_password']; ?></small>
                     <?php endif; ?>
                 </div>
+                <!-- Profile Image -->
                 <div class="form-group has-feedback">
                     <input type="file" class="form-control" name="profile_image" placeholder="Chose Profile Image">
-                    <span class="glyphicon glyphicon-log-in form-control-feedback"></span>
+                    <span class="glyphicon glyphicon-file form-control-feedback"></span>
                     <?php if ($errors['file']): ?>
                         <small class="text-danger"><?php echo $errors['file']; ?></small>
                     <?php endif; ?>
@@ -207,15 +297,16 @@
                         </div>
                     </div>
                     <!-- /.col -->
-                    <div class="col-xs-4">
+                    <div class="col-xs-12">
                         <button type="submit" class="btn btn-primary btn-block btn-flat">Register</button>
                     </div>
                     <!-- /.col -->
                 </div>
             </form>
-
-            <a href="#">I forgot my password</a><br>
-            <a href="./login.php" class="text-center">Sign in</a>
+            <div class="mt-2">
+                <a href="#">I forgot my password</a><br>
+                <a href="./login.php" class="text-center">Sign in</a>
+            </div>
 
         </div>
         <!-- /.login-box-body -->

@@ -98,7 +98,7 @@
                 $error['address'] = "Invalid Address.";
             }
         }
-        
+
         // Date og birth
         if (empty($_POST['dob'])) {
             $error['dob'] = "Date of Birth Is require.";
@@ -239,7 +239,7 @@
                 <div class="form-group has-feedback">
                     <select class="form-control" name="gender" value="<?php echo $gender ?>" required>
                         <option value="">Select Gender</option>
-                        <option class="Male">Male</option>
+                        <option value="Male">Male</option>
                         <option value="Female">Female</option>
                         <option value="Other">other</option>
                     </select>

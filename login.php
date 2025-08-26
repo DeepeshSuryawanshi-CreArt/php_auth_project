@@ -91,6 +91,7 @@
         
         // verif Password
         if (password_verify($password, $user['password'])) {
+          session_start();
           $_SESSION['user_id'] = $user['id'];
           $_SESSION['user_name'] = $user['name'];
           echo "Login Sucessfull.";

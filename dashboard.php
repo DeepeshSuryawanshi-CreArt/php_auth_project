@@ -1,3 +1,42 @@
+<?php
+require "./config/authcheck.php";
+require "./config/db.php";
+
+$query = "SELECT name, email, mobile, address,profile_image FROM users WHERE id = ?";
+$stmt = mysqli_prepare($conn, $query);
+if ($stmt) {
+    mysqli_stmt_bind_param($stmt, 's', $user_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    if ($result && mysqli_num_rows($result) > 0) {
+        $user = mysqli_fetch_assoc($result);
+    } else {
+        echo "User Not Found";
+        exit();
+    }
+} else {
+    die("Query Failed:" . mysqli_errno($conn));
+}
+
+$query = "SELECT * FROM users";
+$stmt = mysqli_prepare($conn, $query);
+if ($stmt) {
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    if ($result && mysqli_num_rows($result) > 0) {
+        $users = mysqli_fetch_all($result);
+        // echo "<pre>";
+        // var_dump($users);
+        // echo "</pre>";
+    } else {
+        echo "User Not Found";
+        exit();
+    }
+    mysqli_stmt_close($stmt);
+} else {
+    die("Query Failed:" . mysqli_errno($conn));
+}
+?>
 <!DOCTYPE html>
 <html>
 
@@ -30,27 +69,7 @@
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
 </head>
-<?php
-require "./config/authcheck.php";
-require "./config/db.php";
 
-$query = "SELECT name, email, mobile, address,profile_image FROM users WHERE id = ?";
-$stmt = mysqli_prepare($conn, $query);
-if ($stmt) {
-    mysqli_stmt_bind_param($stmt, 's', $user_id);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
-    if ($result && mysqli_num_rows($result) > 0) {
-        $user = mysqli_fetch_assoc($result);
-    } else {
-        echo "User Not Found";
-        exit();
-    }
-    mysqli_stmt_close($stmt);
-} else {
-    die("Query Failed:" . mysqli_errno($conn));
-}
-?>
 <body class="hold-transition skin-blue sidebar-mini">
     <div class="wrapper">
         <!-- header -->
@@ -68,8 +87,7 @@ if ($stmt) {
                 </h1>
                 <ol class="breadcrumb">
                     <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
-                    <li><a href="#">Examples</a></li>
-                    <li class="active">User profile</li>
+                    <li class="active">User Table</li>
                 </ol>
             </section>
 
@@ -79,8 +97,13 @@ if ($stmt) {
                 <div class="row">
                     <div class="col-md-12">
                         <div class="box">
-                            <div class="box-header">
-                                <h3 class="box-title">Hover Data Table</h3>
+                            <div class="box-header ">
+                                <h3 class="box-title">User Data Table</h3>
+                                <div class="">
+                                    <a href="create_user.php?>" class="btn btn-md btn-success" >
+                                        <i class="fa fa-plus-square"></i> Create User
+                                    </a>
+                                </div>
                             </div>
                             <!-- /.box-header -->
                             <div class="box-body">
@@ -91,114 +114,56 @@ if ($stmt) {
                                     </div>
                                     <div class="row">
                                         <div class="col-sm-12">
-                                            <table id="example2" class="table table-bordered table-hover dataTable"
-                                                role="grid" aria-describedby="example2_info">
+                                            <table id="example2" class="table table-bordered table-hover dataTable">
                                                 <thead>
                                                     <tr role="row">
-                                                        <th class="sorting_asc" tabindex="0" aria-controls="example2"
-                                                            rowspan="1" colspan="1" aria-sort="ascending"
-                                                            aria-label="Rendering engine: activate to sort column descending">
-                                                            Rendering engine</th>
-                                                        <th class="sorting" tabindex="0" aria-controls="example2"
-                                                            rowspan="1" colspan="1"
-                                                            aria-label="Browser: activate to sort column ascending">
-                                                            Browser</th>
-                                                        <th class="sorting" tabindex="0" aria-controls="example2"
-                                                            rowspan="1" colspan="1"
-                                                            aria-label="Platform(s): activate to sort column ascending">
-                                                            Platform(s)</th>
-                                                        <th class="sorting" tabindex="0" aria-controls="example2"
-                                                            rowspan="1" colspan="1"
-                                                            aria-label="Engine version: activate to sort column ascending">
-                                                            Engine version</th>
-                                                        <th class="sorting" tabindex="0" aria-controls="example2"
-                                                            rowspan="1" colspan="1"
-                                                            aria-label="CSS grade: activate to sort column ascending">
-                                                            CSS grade</th>
+                                                        <th>Id</th>
+                                                        <th>Name</th>
+                                                        <th>Email</th>
+                                                        <th>Mobile no.</th>
+                                                        <th>Gender</th>
+                                                        <th>DOB</th>
+                                                        <th>Address</th>
+                                                        <th>Profile</th>
+                                                        <th>Actions</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    <tr role="row" class="odd">
-                                                        <td class="sorting_1">Gecko</td>
-                                                        <td>Firefox 1.0</td>
-                                                        <td>Win 98+ / OSX.2+</td>
-                                                        <td>1.7</td>
-                                                        <td>A</td>
-                                                    </tr>
-                                                    <tr role="row" class="even">
-                                                        <td class="sorting_1">Gecko</td>
-                                                        <td>Firefox 1.5</td>
-                                                        <td>Win 98+ / OSX.2+</td>
-                                                        <td>1.8</td>
-                                                        <td>A</td>
-                                                    </tr>
-                                                    <tr role="row" class="odd">
-                                                        <td class="sorting_1">Gecko</td>
-                                                        <td>Firefox 2.0</td>
-                                                        <td>Win 98+ / OSX.2+</td>
-                                                        <td>1.8</td>
-                                                        <td>A</td>
-                                                    </tr>
-                                                    <tr role="row" class="even">
-                                                        <td class="sorting_1">Gecko</td>
-                                                        <td>Firefox 3.0</td>
-                                                        <td>Win 2k+ / OSX.3+</td>
-                                                        <td>1.9</td>
-                                                        <td>A</td>
-                                                    </tr>
-                                                    <tr role="row" class="odd">
-                                                        <td class="sorting_1">Gecko</td>
-                                                        <td>Camino 1.0</td>
-                                                        <td>OSX.2+</td>
-                                                        <td>1.8</td>
-                                                        <td>A</td>
-                                                    </tr>
-                                                    <tr role="row" class="even">
-                                                        <td class="sorting_1">Gecko</td>
-                                                        <td>Camino 1.5</td>
-                                                        <td>OSX.3+</td>
-                                                        <td>1.8</td>
-                                                        <td>A</td>
-                                                    </tr>
-                                                    <tr role="row" class="odd">
-                                                        <td class="sorting_1">Gecko</td>
-                                                        <td>Netscape 7.2</td>
-                                                        <td>Win 95+ / Mac OS 8.6-9.2</td>
-                                                        <td>1.7</td>
-                                                        <td>A</td>
-                                                    </tr>
-                                                    <tr role="row" class="even">
-                                                        <td class="sorting_1">Gecko</td>
-                                                        <td>Netscape Browser 8</td>
-                                                        <td>Win 98SE+</td>
-                                                        <td>1.7</td>
-                                                        <td>A</td>
-                                                    </tr>
-                                                    <tr role="row" class="odd">
-                                                        <td class="sorting_1">Gecko</td>
-                                                        <td>Netscape Navigator 9</td>
-                                                        <td>Win 98+ / OSX.2+</td>
-                                                        <td>1.8</td>
-                                                        <td>A</td>
-                                                    </tr>
-                                                    <tr role="row" class="even">
-                                                        <td class="sorting_1">Gecko</td>
-                                                        <td>Mozilla 1.0</td>
-                                                        <td>Win 95+ / OSX.1+</td>
-                                                        <td>1</td>
-                                                        <td>A</td>
-                                                    </tr>
+                                                    <?php if (!empty($users)): ?>
+                                                        <?php foreach ($users as $user): ?>
+                                                            <tr>
+                                                                <td><?= htmlspecialchars($user[0]) ?></td>
+                                                                <td><?= htmlspecialchars($user[1]) ?></td>
+                                                                <td><?= htmlspecialchars($user[2]) ?></td>
+                                                                <td><?= htmlspecialchars($user[7]) ?></td>
+                                                                <td><?= htmlspecialchars($user[8]) ?></td>
+                                                                <td><?= htmlspecialchars($user[10]) ?></td>
+                                                                <td><?= htmlspecialchars($user[9]) ?></td>
+                                                                <td>
+                                                                    <img src="<?= htmlspecialchars($user[4]) ?>" alt="Profile"
+                                                                        width="50" height="50" style="border-radius:50%;">
+                                                                </td>
+                                                                <td>
+                                                                    <a href="update_user.php?id=<?= $user[0] ?>"
+                                                                        class="btn btn-sm btn-primary">
+                                                                        <i class="fa fa-edit"></i> Edit
+                                                                    </a>
+                                                                    <a href="delete_user.php?id=<?= $user[0] ?>"
+                                                                        class="btn btn-sm btn-danger"
+                                                                        onclick="return confirm('Are you sure you want to delete this user?');">
+                                                                        <i class="fa fa-trash"></i> Delete
+                                                                    </a>
+                                                                </td>
+                                                            </tr>
+                                                        <?php endforeach; ?>
+                                                    <?php else: ?>
+                                                        <tr>
+                                                            <td colspan="9" class="text-center">No users found</td>
+                                                        </tr>
+                                                    <?php endif; ?>
                                                 </tbody>
-                                                <tfoot>
-                                                    <tr>
-                                                        <th rowspan="1" colspan="1">Rendering engine</th>
-                                                        <th rowspan="1" colspan="1">Browser</th>
-                                                        <th rowspan="1" colspan="1">Platform(s)</th>
-                                                        <th rowspan="1" colspan="1">Engine version</th>
-                                                        <th rowspan="1" colspan="1">CSS grade</th>
-                                                    </tr>
-                                                </tfoot>
                                             </table>
+
                                         </div>
                                     </div>
                                     <div class="row">

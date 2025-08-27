@@ -36,7 +36,7 @@
                 </a>
                 <ul class="treeview-menu">
                     <li><a href="./profile.php"><i class="fa fa-circle-o"></i> Profile</a></li>
-                    <li><a href="/dashboard.php"><i class="fa fa-circle-o"></i> User Table</a></li>
+                    <li><a href="./dashboard.php"><i class="fa fa-circle-o"></i> User Table</a></li>
                 </ul>
             </li>
             <li><a href="https://adminlte.io/docs"><i class="fa fa-book"></i> <span>Documentation</span></a></li>

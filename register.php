@@ -1,3 +1,176 @@
+<!-- Php logics -->
+<?php
+require "config/db.php";  // $conn = mysqli_connect(...)
+$name = $email = $mobile = $gender = $dob = $password = $address = $file_path = '';
+$all_set = true;
+$errors = [
+    'name' => '',
+    'email' => '',
+    'mobile' => '',
+    'gender' => '',
+    'address' => '',
+    'dob' => '',
+    'password' => '',
+    'confirm_password' => '',
+    'file' => '',
+    'system' => ''
+
+];
+function test_data($data)
+{
+    $data = trim($data);
+    $data = stripslashes($data);
+    $data = htmlspecialchars($data);
+    return $data;
+}
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+    // username
+    if (empty($_POST['name'])) {
+        $errors['name'] = "Name is Required";
+        $all_set = false;
+    } else {
+        $name = test_data($_POST["name"]);
+        if (!preg_match("/^[a-zA-Z-' ]*$/", $name)) {
+            $errors['name'] = "Only letters and white space allowed";
+            $all_set = false;
+        }
+    }
+
+    // email
+    if (empty($_POST['email'])) {
+        $errors['email'] = "Email is Required";
+        $all_set = false;
+    } else {
+        $email = test_data($_POST["email"]);
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors['email'] = "Invalid Email Address.";
+            $all_set = false;
+        }
+    }
+
+    // mobile
+    if (empty($_POST['mobile'])) {
+        $errors['mobile'] = "Mobile No. is Required";
+        $all_set = false;
+    } else {
+        $mobile = test_data($_POST["mobile"]);
+        if (strlen($mobile) > 10 or strlen($mobile) < 10) {
+            $errors['mobile'] = "Invalid Mobile No.";
+            $all_set = false;
+        }
+    }
+
+    // gender
+    if (empty($_POST['gender'])) {
+        $errors['gender'] = "Gender is require";
+        $all_set = false;
+    } else {
+        $gender = test_data($_POST["gender"]);
+    }
+
+    // address
+    if (empty($_POST['address'])) {
+        $error['address'] = "Address Is require.";
+    } else {
+        $address = test_data($_POST['address']);
+        if (strlen($address) > 10) {
+            $error['address'] = "Invalid Address.";
+        }
+    }
+
+    // Date og birth
+    if (empty($_POST['dob'])) {
+        $error['dob'] = "Date of Birth Is require.";
+    } else {
+        $dob = test_data($_POST['dob']);
+        if (strlen($dob) > 8) {
+            $error['address'] = "Invalid Address.";
+        }
+    }
+
+    // password
+    if (empty($_POST['password'])) {
+        $errors['password'] = "Password is Required";
+        $all_set = false;
+    } else {
+        $password = $_POST['password'];
+        if (strlen($password) < 8) {
+            $errors['password'] = "Password must have at least 8 characters";
+            $all_set = false;
+        } else {
+            // hash the password
+            $password = password_hash($password, PASSWORD_DEFAULT);
+        }
+    }
+
+    // Conform - password
+    if ($_POST['confirm_password'] !== $_POST['confirm_password']) {
+        $password = $_POST['password'];
+        $errors['confirm_password'] = "conform Passwords do not match";
+        $all_set = false;
+    }
+
+    // File upload
+    if (!empty($_FILES['profile_image']['name'])) {
+        if ($_FILES['profile_image']['error'] !== UPLOAD_ERR_OK) {
+            $errors['file'] = "Error uploading file.";
+            $all_set = false;
+        } else {
+            $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
+            if (!in_array($_FILES['profile_image']['type'], $allowed_types)) {
+                $errors['file'] = "Only JPG, PNG, GIF allowed.";
+                $all_set = false;
+            } else {
+                $target_dir = "uploads/";
+                if (!is_dir($target_dir)) {
+                    mkdir($target_dir, 0755, true);
+                }
+                $file_name = time() . "_" . basename($_FILES["profile_image"]["name"]);
+                $target_file = $target_dir . $file_name;
+
+                if (move_uploaded_file($_FILES["profile_image"]["tmp_name"], $target_file)) {
+                    $file_path = $target_file;
+                } else {
+                    $errors['file'] = "Could not save uploaded file.";
+                    $all_set = false;
+                }
+            }
+        }
+    }
+
+
+    // Insert into DB if all valid
+    if ($all_set) {
+        // Escape values for safety
+        $name = mysqli_real_escape_string($conn, $name);
+        $email = mysqli_real_escape_string($conn, $email);
+        $mobile = mysqli_real_escape_string($conn, $mobile);
+        $gender = mysqli_real_escape_string($conn, $gender);
+        $address = mysqli_real_escape_string($conn, $address);
+        $dob = mysqli_real_escape_string($conn, $dob);
+        $password = mysqli_real_escape_string($conn, $password);
+        $file_path = mysqli_real_escape_string($conn, $file_path);
+
+        $query = "INSERT INTO users (name, email, mobile, gender, dob,address ,password, profile_image) 
+              VALUES ('$name', '$email','$mobile','$gender','$dob','$address','$password', '$file_path')";
+        $result = mysqli_query($conn, $query);
+        if (!$result) {
+            if (mysqli_errno($conn) == 1062) {
+                $errors['system'] = "Error: Duplicate entry (maybe email already exists)";
+            } else {
+                $error['system'] = "Someting went Wrong, Please Try Again.";
+                error_log("Database Error:" . mysqli_error($conn));
+            }
+        } else {
+            header("Location: login.php?error=$error[system]");
+            exit();
+        }
+    }
+}
+?>
+<!-- Php end -->
 <!DOCTYPE html>
 <html>
 
@@ -17,178 +190,6 @@
     <link rel="stylesheet" href="./dist/css/AdminLTE.min.css">
     <!-- iCheck -->
     <link rel="stylesheet" href="./plugins/iCheck/square/blue.css">
-    <!-- Php logics -->
-    <?php
-    require "config/db.php";  // $conn = mysqli_connect(...)
-    $name = $email = $mobile = $gender = $dob = $password = $address = $file_path = '';
-    $all_set = true;
-    $errors = [
-        'name' => '',
-        'email' => '',
-        'mobile' => '',
-        'gender' => '',
-        'address' => '',
-        'dob' => '',
-        'password' => '',
-        'confirm_password' => '',
-        'file' => '',
-        'system' => ''
-
-    ];
-    function test_data($data)
-    {
-        $data = trim($data);
-        $data = stripslashes($data);
-        $data = htmlspecialchars($data);
-        return $data;
-    }
-
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-
-        // username
-        if (empty($_POST['name'])) {
-            $errors['name'] = "Name is Required";
-            $all_set = false;
-        } else {
-            $name = test_data($_POST["name"]);
-            if (!preg_match("/^[a-zA-Z-' ]*$/", $name)) {
-                $errors['name'] = "Only letters and white space allowed";
-                $all_set = false;
-            }
-        }
-
-        // email
-        if (empty($_POST['email'])) {
-            $errors['email'] = "Email is Required";
-            $all_set = false;
-        } else {
-            $email = test_data($_POST["email"]);
-            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $errors['email'] = "Invalid Email Address.";
-                $all_set = false;
-            }
-        }
-
-        // mobile
-        if (empty($_POST['mobile'])) {
-            $errors['mobile'] = "Mobile No. is Required";
-            $all_set = false;
-        } else {
-            $mobile = test_data($_POST["mobile"]);
-            if (strlen($mobile) > 10 or strlen($mobile) < 10) {
-                $errors['mobile'] = "Invalid Mobile No.";
-                $all_set = false;
-            }
-        }
-
-        // gender
-        if (empty($_POST['gender'])) {
-            $errors['gender'] = "Gender is require";
-            $all_set = false;
-        } else {
-            $gender = test_data($_POST["gender"]);
-        }
-
-        // address
-        if (empty($_POST['address'])) {
-            $error['address'] = "Address Is require.";
-        } else {
-            $address = test_data($_POST['address']);
-            if (strlen($address) > 10) {
-                $error['address'] = "Invalid Address.";
-            }
-        }
-
-        // Date og birth
-        if (empty($_POST['dob'])) {
-            $error['dob'] = "Date of Birth Is require.";
-        } else {
-            $dob = test_data($_POST['dob']);
-            if (strlen($dob) > 8) {
-                $error['address'] = "Invalid Address.";
-            }
-        }
-
-        // password
-        if (empty($_POST['password'])) {
-            $errors['password'] = "Password is Required";
-            $all_set = false;
-        } else {
-            $password = $_POST['password'];
-            if (strlen($password) < 8) {
-                $errors['password'] = "Password must have at least 8 characters";
-                $all_set = false;
-            } else {
-                // hash the password
-                $password = password_hash($password, PASSWORD_DEFAULT);
-            }
-        }
-
-        // Conform - password
-        if ($_POST['confirm_password'] !== $_POST['confirm_password']) {
-            $errors['confirm_password'] = "conform Passwords do not match";
-            $all_set = false;
-        }
-
-        // File upload
-        if (!empty($_FILES['profile_image']['name'])) {
-            if ($_FILES['profile_image']['error'] !== UPLOAD_ERR_OK) {
-                $errors['file'] = "Error uploading file.";
-                $all_set = false;
-            } else {
-                $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
-                if (!in_array($_FILES['profile_image']['type'], $allowed_types)) {
-                    $errors['file'] = "Only JPG, PNG, GIF allowed.";
-                    $all_set = false;
-                } else {
-                    $target_dir = "uploads/";
-                    if (!is_dir($target_dir)) {
-                        mkdir($target_dir, 0755, true);
-                    }
-                    $file_name = time() . "_" . basename($_FILES["profile_image"]["name"]);
-                    $target_file = $target_dir . $file_name;
-
-                    if (move_uploaded_file($_FILES["profile_image"]["tmp_name"], $target_file)) {
-                        $file_path = $target_file;
-                    } else {
-                        $errors['file'] = "Could not save uploaded file.";
-                        $all_set = false;
-                    }
-                }
-            }
-        }
-
-
-        // Insert into DB if all valid
-        if ($all_set) {
-            // Escape values for safety
-            $name = mysqli_real_escape_string($conn, $name);
-            $email = mysqli_real_escape_string($conn, $email);
-            $mobile = mysqli_real_escape_string($conn, $mobile);
-            $gender = mysqli_real_escape_string($conn, $gender);
-            $address = mysqli_real_escape_string($conn, $address);
-            $dob = mysqli_real_escape_string($conn, $dob);
-            $password = mysqli_real_escape_string($conn, $password);
-            $file_path = mysqli_real_escape_string($conn, $file_path);
-
-            $query = "INSERT INTO users (name, email, mobile, gender, dob,address ,password, profile_image) 
-                  VALUES ('$name', '$email','$mobile','$gender','$dob','$address','$password', '$file_path')";
-            $result = mysqli_query($conn, $query);
-            if (!$result) {
-                if (mysqli_errno($conn) == 1062) {
-                    $errors['system'] = "Error: Duplicate entry (maybe email already exists)";
-                } else {
-                    $error['system'] = "Someting went Wrong, Please Try Again.";
-                    error_log("Database Error:" . mysqli_error($conn));
-                }
-            } else {
-                header("Location: login.php?error=$error[system]");
-                exit();
-            }
-        }
-    }
-    ?>
-    <!-- Php end -->
     <!-- Google Font -->
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
